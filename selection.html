@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copilot Dissatisfaction</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-image: url('img/interview.webp');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.5); /* 50% transparent white */
+            z-index: -1;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.8); /* Slightly transparent white */
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 50px;
+        }
+
+        .clue-box, .category-box {
+            background-color: #ffffff;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            cursor: move;
+            position: relative;
+            box-shadow: 0 0 0 2px #f3f0fa, 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .category-container {
+            min-height: 200px;
+            border: 2px dashed #007bff;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 2px #f3f0fa, 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .feedback {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .feedback.correct {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .feedback.incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .remove-clue {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+    <div class="container">
+        <h3 class="text-center mb-2"><strong>Match the Clues to Their Categories</strong></h3>
+        <p class="text-center mb-4">Drag and drop the clues into the correct categories.</p>
+        <div class="row">
+            <div class="col-md-6">
+                <h4><strong>Clues</strong></h4>
+                <div id="clues-container">
+                    <!-- Clues will be dynamically added here -->
+                </div>
+                <div id="feedback" class="feedback"></div>
+            </div>
+            <div class="col-md-6">
+                <h4><strong>Categories</strong></h4>
+                <div id="result-demonstrability" class="category-container" data-category="result-demonstrability">
+                    <h5>Result Demonstrability</h5>
+                    <p><i>The degree to which an individual believes that the results of using a system are tangible, observable, and communicable.</i></p>
+                </div>
+                <div id="job-relevance" class="category-container" data-category="job-relevance">
+                    <h5>Job Relevance</h5>
+                    <p><i>The degree to which an individual believes that the target system is applicable to their job.</i></p>
+                </div>
+                <div id="computer-self-efficacy" class="category-container" data-category="computer-self-efficacy">
+                    <h5>Computer Self-Efficacy</h5>
+                    <p><i>The degree to which an individual believes that they have the ability to perform a specific task/job using the computer.</i></p>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <button id="submitButton" class="btn btn-dark btn-md rounded-pill mt-3 mb-4">Submit</button>
+            </div>
+        </div>
+        
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const clues = [
+            { text: "I just don't see how using this tool is going to help me do my job better.", category: "result-demonstrability" },
+            { text: "I've been doing this job the same way for years, and I'm not sure why I need to change now.", category: "job-relevance" },
+            { text: "It's too complicated.", category: "computer-self-efficacy" },
+            { text: "I don't see how this tool is going to improve the quality of my work—it just feels unnecessary.", category: "result-demonstrability" },
+            { text: "I don't think this tool will make a noticeable difference to the tasks I already do well.", category: "result-demonstrability" },
+            { text: "I don't really see how this tool applies to what I do every day.", category: "job-relevance" },
+            { text: "I've managed just fine without it so far, so I don't see the point.", category: "job-relevance" },
+            { text: "It doesn't seem like this tool will help me solve the real problems I face at work.", category: "result-demonstrability" }
+        ];
+
+        let droppedClues = {
+            "result-demonstrability": [],
+            "job-relevance": [],
+            "computer-self-efficacy": []
+        };
+
+        function createClueElement(clue, inCategory = false) {
+            const clueElement = document.createElement('div');
+            clueElement.className = 'clue-box';
+            clueElement.textContent = clue.text;
+            clueElement.draggable = true;
+            clueElement.dataset.text = clue.text;
+            clueElement.dataset.category = clue.category;
+
+            clueElement.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', JSON.stringify(clue));
+            });
+
+            if (inCategory) {
+                const removeButton = document.createElement('span');
+                removeButton.className = 'remove-clue';
+                removeButton.innerHTML = '&times;';
+                removeButton.addEventListener('click', () => {
+                    clueElement.remove();
+                    // Remove from the category when the clue is removed
+                    droppedClues[clue.category] = droppedClues[clue.category].filter(item => item !== clue.text);
+                    cluesContainer.appendChild(createClueElement(clue));
+                });
+                clueElement.appendChild(removeButton);
+            }
+            
+            return clueElement;
+        }
+
+        const cluesContainer = document.getElementById('clues-container');
+        clues.forEach(clue => {
+            cluesContainer.appendChild(createClueElement(clue));
+        });
+
+        const categoryContainers = document.querySelectorAll('.category-container');
+        categoryContainers.forEach(container => {
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
+
+            container.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const clueData = JSON.parse(e.dataTransfer.getData('text'));
+                const clueElement = createClueElement(clueData, true);
+                container.appendChild(clueElement);
+                e.dataTransfer.clearData();
+
+                // Track the dropped clue in the appropriate category
+                const category = container.dataset.category;
+                droppedClues[category].push(clueData.text);
+
+                // Remove the clue from its original container
+                const originalClue = cluesContainer.querySelector(`.clue-box[data-text="${clueData.text}"]`);
+                if (originalClue) {
+                    originalClue.remove();
+                }
+            });
+        });
+
+        document.getElementById('submitButton').addEventListener('click', () => {
+            const feedbackElement = document.getElementById('feedback');
+            let allCorrect = true;
+            
+            categoryContainers.forEach(container => {
+                const cluesInCategory = Array.from(container.querySelectorAll('.clue-box'));
+                cluesInCategory.forEach(clue => {
+                    const correctCategory = clue.dataset.category;
+                    if (correctCategory !== container.id) {
+                        allCorrect = false;
+                    }
+                });
+            });
+
+            const correctAnswers = `
+                <strong>Result Demonstrability:</strong>
+                <ul>
+                    <li><i>I just don't see how using this tool is going to help me do my job better.</i></li>
+                    <li><i>I don't see how this tool is going to improve the quality of my work—it just feels unnecessary.</i></li>
+                    <li><i>I don't think this tool will make a noticeable difference to the tasks I already do well.</i></li>
+                    <li><i>It doesn't seem like this tool will help me solve the real problems I face at work.</i></li>
+                </ul>
+                <strong>Job Relevance:</strong>
+                <ul>
+                    <li><i>I've been doing this job the same way for years, and I'm not sure why I need to change now.</i></li>
+                    <li><i>I don't really see how this tool applies to what I do every day.</i></li>
+                    <li><i>I've managed just fine without it so far, so I don't see the point.</i></li>
+                </ul>
+                <strong>Computer Self-Efficacy:</strong>
+                <ul>
+                    <li><i>It's too complicated.</i></li>
+                </ul>
+            `;
+
+            if (allCorrect) {
+                feedbackElement.innerHTML = "<strong>✨ Good job! ✨</strong><br><br>" +
+                    "Here are the correct answers:<br><br>" +
+                    correctAnswers +
+                    "<br><button id='nextButton' class='btn btn-dark btn-md rounded-pill mt-3'>Next</button>";
+                feedbackElement.className = "feedback correct";
+                
+                // Add event listener to the next button
+                document.getElementById('nextButton').addEventListener('click', () => {
+                    window.location.href = 'conclusion.html';
+                });
+            } else {
+                feedbackElement.innerHTML = "<strong>🌸 It's okay, let's review the correct answers! 🌸</strong><br><br>" +
+                    correctAnswers +
+                    "<br><button id='nextButton' class='btn btn-dark btn-md rounded-pill mt-3'>Next</button>";
+                feedbackElement.className = "feedback incorrect";
+
+                // Add event listener to the next button
+                document.getElementById('nextButton').addEventListener('click', () => {
+                    window.location.href = 'conclusion.html';
+                });
+            }
+            feedbackElement.style.display = "block";
+        });
+
+    </script>
+</body>
+</html>

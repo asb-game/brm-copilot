@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copilot Dissatisfaction</title>
+    <link rel="icon" type="img/favicon.ico" href="img/favicon.ico">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-image: url('img/interview.webp');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            margin: 0;
+            padding: 0;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.5); /* 50% transparent white */
+            z-index: 1;
+        }
+        .container {
+            position: relative;
+            z-index: 2;
+            background-color: rgba(255, 255, 255, 0.8); /* Slightly transparent white */
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 50px;
+        }
+        .employee-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .employee-card {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .employee-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .employee-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+        .comment-panel {
+            background-color: rgba(255, 255, 255, 0.9); /* Slightly transparent */
+            border-radius: 10px;
+            padding: 20px;
+            height: 100%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            height: 530px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .window-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #e0e0e0;
+            padding: 5px 10px;
+            border-radius: 10px 10px 0 0;
+            margin-bottom: 10px;
+        }
+
+        .window-controls {
+            display: flex;
+        }
+
+        .window-control {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .close { background-color: #ff5f56; }
+        .minimize { background-color: #ffbd2e; }
+        .maximize { background-color: #27c93f; }
+
+        .notepad-title {
+            font-size: 0.9em;
+            color: #333;
+        }
+
+        #current-datetime {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .comment-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .comment-list li {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+        }
+
+        .feedback-instruction {
+            text-align: center;
+            margin-bottom: 20px;
+            font-style: italic;
+            color: #666;
+        }
+
+        #nextButton {
+            width: 200px;
+            margin-bottom: 20px;  /* Added margin-bottom */
+        }
+
+        @media (max-width: 768px) {
+            .employee-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <p class="feedback-instruction">Click on an employee to hear their feedback</p>
+                <div class="employee-grid">
+                    <div class="employee-card" data-employee="1">
+                        <img src="img/employee1.png" alt="Employee 1" class="employee-image">
+                        <h5>Sarah</h5>
+                    </div>
+                    <div class="employee-card" data-employee="2">
+                        <img src="img/employee2.png" alt="Employee 2" class="employee-image">
+                        <h5>Lisa</h5>
+                    </div>
+                    <div class="employee-card" data-employee="3">
+                        <img src="img/employee3.png" alt="Employee 3" class="employee-image">
+                        <h5>Emily</h5>
+                    </div>
+                    <div class="employee-card" data-employee="4">
+                        <img src="img/employee4.png" alt="Employee 4" class="employee-image">
+                        <h5>David</h5>
+                    </div>
+                    <div class="employee-card" data-employee="5">
+                        <img src="img/employee5.png" alt="Employee 5" class="employee-image">
+                        <h5>Mike</h5>
+                    </div>
+                    <div class="employee-card" data-employee="6">
+                        <img src="img/employee6.png" alt="Employee 6" class="employee-image">
+                        <h5>Alex</h5>
+                    </div>
+                    <div class="employee-card" data-employee="7">
+                        <img src="img/employee7.png" alt="Employee 7" class="employee-image">
+                        <h5>John</h5>
+                    </div>
+                    <div class="employee-card" data-employee="8">
+                        <img src="img/employee8.png" alt="Employee 8" class="employee-image">
+                        <h5>Emma</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="comment-panel">
+                    <div class="window-header">
+                        <div class="window-controls">
+                            <div class="window-control close"></div>
+                            <div class="window-control minimize"></div>
+                            <div class="window-control maximize"></div>
+                        </div>
+                        <div class="notepad-title">mynotes.txt</div>
+                    </div>
+                    <div id="current-datetime"></div>
+                    <ul class="comment-list" id="commentList">
+                        <!-- Comments will be added here dynamically -->
+                    </ul>
+                </div>
+                <div class="text-center mt-3">
+                    <button id="nextButton" class="btn btn-dark btn-md rounded-pill mt-3" style="display: none;">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function updateDateTime() {
+            const now = new Date();
+            const options = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+            const formattedDate = now.toLocaleDateString('en-US', options);
+            document.getElementById('current-datetime').textContent = formattedDate;
+        }
+
+        // Call this function when the page loads
+        updateDateTime()
+
+        function scrollToBottom() {
+            const commentList = document.getElementById('commentList');
+            commentList.scrollTop = commentList.scrollHeight;
+        }
+
+        const employeeComments = {
+            1: "• <i>I just don't see how using this tool is going to help me do my job better.</i>",
+            2: "• <i>I've been doing this job the same way for years, and I'm not sure why I need to change now.</i>",
+            3: "• <i>It's too complicated.</i>",
+            4: "• <i>I don't see how this tool is going to improve the quality of my work—it just feels unnecessary.</i>",
+            5: "• <i>I don't think this tool will make a noticeable difference to the tasks I already do well.</i>",
+            6: "• <i>I don't really see how this tool applies to what I do every day.</i>",
+            7: "• <i>I've managed just fine without it so far, so I don't see the point.</i>",
+            8: "• <i>It doesn't seem like this tool will help me solve the real problems I face at work.</i>"
+        };
+
+        let clickedEmployees = new Set();
+
+        document.querySelectorAll('.employee-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const employeeId = this.getAttribute('data-employee');
+                
+                // Add comment summary to the right panel
+                const commentList = document.getElementById('commentList');
+                if (!commentList.querySelector(`[data-employee="${employeeId}"]`)) {
+                    const li = document.createElement('li');
+                    li.innerHTML = employeeComments[employeeId];
+                    li.setAttribute('data-employee', employeeId);
+                    commentList.appendChild(li);
+                    scrollToBottom(); // Scroll to the bottom after adding new content
+                }
+                
+                // Add employee to clicked set
+                clickedEmployees.add(employeeId);
+
+                // Check if all employees have been clicked
+                if (clickedEmployees.size === 8) {
+                    document.getElementById('nextButton').style.display = 'block';
+                }
+            });
+        });
+
+        // Add event listener for "Next" button to navigate to feedback.html
+        document.getElementById('nextButton').addEventListener('click', function() {
+            window.location.href = 'feedback.html';
+        });
+
+    </script>
+</body>
+</html>
